@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Tasqueta de Caldes - Recomendador Inteligente</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .wine-gradient {
+            background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+        }
+        
+        .food-gradient {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .wine-bottle {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const dishesData = {
+            tapas: [
+                { name: "Jamón Ibérico", price: 24, category: "Embutidos", ingredients: ["jamón ibérico"], allergens: [], dietary: ["sin-gluten"], description: "Plato de jamón ibérico de calidad premium" },
+                { name: "Foie Micuit de Girona", price: 16.9, category: "Entrantes Premium", ingredients: ["foie", "pan"], allergens: ["gluten"], dietary: [], description: "Foie micuit con tostaditas crujientes hechas en La Tasqueta" },
+                { name: "Anchoas del Cantábrico", price: 15, category: "Pescado", ingredients: ["anchoas", "tomate", "pan"], allergens: ["pescado", "gluten"], dietary: [], description: "6 filetes de anchoa con pan de cristal y tomate" },
+                { name: "Chips de Puerro", price: 9.8, category: "Vegetariano", ingredients: ["puerro", "queso de cabra", "miel"], allergens: ["lácteos"], dietary: ["vegetariano"], description: "Chips crujientes con queso de cabra y miel de caña" },
+                { name: "Patatas Bravas", price: 9.8, category: "Clásicos", ingredients: ["patatas", "salsa brava"], allergens: [], dietary: ["vegetariano", "vegano"], description: "Las famosas BRAVAS, simplemente hay que probarlas" },
+                { name: "Croquetas de Pollo", price: 9.6, category: "Croquetas", ingredients: ["pollo", "bechamel"], allergens: ["gluten", "lácteos", "huevo"], dietary: [], description: "Croquetas caseras de pollo (4 unidades)" },
+                { name: "Croquetas de Espinacas", price: 9.6, category: "Croquetas", ingredients: ["espinacas", "gorgonzola", "nueces"], allergens: ["gluten", "lácteos", "frutos secos", "huevo"], dietary: ["vegetariano"], description: "Croquetas de espinacas, gorgonzola y nueces (4 unidades)" },
+                { name: "Croquetas de Gamba Roja", price: 14, category: "Croquetas", ingredients: ["gamba roja", "bechamel"], allergens: ["gluten", "lácteos", "marisco", "huevo"], dietary: [], description: "Croquetas premium de gamba roja (4 unidades)" },
+                { name: "Gyoza de Verdura", price: 8, category: "Oriental", ingredients: ["verduras", "masa"], allergens: ["gluten"], dietary: ["vegetariano"], description: "Gyoza japonesa de verduras (4 unidades)" },
+                { name: "Gyoza de Gamba", price: 9.6, category: "Oriental", ingredients: ["gamba", "verduras", "masa"], allergens: ["gluten", "marisco"], dietary: [], description: "Gyoza japonesa de gamba (4 unidades)" },
+                { name: "Gyoza de Pollo y Verdura", price: 8.8, category: "Oriental", ingredients: ["pollo", "verduras", "masa"], allergens: ["gluten"], dietary: [], description: "Gyoza japonesa de pollo y verdura (4 unidades)" },
+                { name: "Torrezno de Soria", price: 4.5, category: "Embutidos", ingredients: ["panceta"], allergens: [], dietary: [], description: "Cansalada adobada de Soria" },
+                { name: "Boquerones en Vinagre", price: 6.9, category: "Pescado", ingredients: ["boquerones", "vinagre", "ajo", "perejil"], allergens: ["pescado"], dietary: [], description: "Del Cantábrico, carnosos y con su punto de vinagre" },
+                { name: "Queso Curado de Oveja", price: 8.8, category: "Quesos", ingredients: ["queso de oveja"], allergens: ["lácteos"], dietary: ["vegetariano"], description: "Plato de queso curado de oveja 100%" },
+                { name: "Fuet de Calidad", price: 4.5, category: "Embutidos", ingredients: ["fuet"], allergens: [], dietary: [], description: "Fuet tallado al momento" },
+                { name: "Morcilla de Arroz", price: 6.8, category: "Embutidos", ingredients: ["morcilla", "arroz"], allergens: [], dietary: [], description: "Morcilla de arroz de Burgos" }
+            ],
+            ensaladas: [
+                { name: "Ensalada con Queso de Cabra", price: 14.8, category: "Ensaladas", ingredients: ["queso de cabra", "jamón ibérico", "nueces", "membrillo"], allergens: ["lácteos", "frutos secos"], dietary: [], description: "Con jamón ibérico, nueces, membrillo y vinagreta de vermut" },
+                { name: "Burrata Italiana", price: 15, category: "Ensaladas", ingredients: ["burrata", "tomate", "aceite de oliva"], allergens: ["lácteos"], dietary: ["vegetariano"], description: "Burrata artesana con carpaccio de tomate y aceite de oliva virgen extra" },
+                { name: "Ensalada con Ventresca", price: 16.9, category: "Ensaladas", ingredients: ["ventresca del Cantábrico", "tomate", "cebolla tierna"], allergens: ["pescado"], dietary: [], description: "Auténtica ventresca del Cantábrico con tomate y cebolla tierna del Maresme" }
+            ],
+            patatas: [
+                { name: "Patatas con Huevos y Jamón Ibérico", price: 17.5, category: "Patatas", ingredients: ["patatas", "huevos", "jamón ibérico"], allergens: ["huevo"], dietary: [], description: "Patatas fritas caseras con huevos rotos y jamón ibérico" },
+                { name: "Patatas con Huevos y Foie", price: 17.5, category: "Patatas", ingredients: ["patatas", "huevos", "foie"], allergens: ["huevo"], dietary: [], description: "Patatas fritas caseras con huevos rotos y foie" },
+                { name: "Patatas con Huevos y Verduras", price: 15.5, category: "Patatas", ingredients: ["patatas", "huevos", "verduras"], allergens: ["huevo"], dietary: ["vegetariano"], description: "Patatas fritas caseras con huevos rotos y verduras de temporada" },
+                { name: "Patatas con Huevos y Cebolla Caramelizada", price: 15.5, category: "Patatas", ingredients: ["patatas", "huevos", "cebolla"], allergens: ["huevo"], dietary: ["vegetariano"], description: "Patatas fritas caseras con huevos rotos y cebolla caramelizada" },
+                { name: "Patatas con Huevos y Morcilla", price: 15.5, category: "Patatas", ingredients: ["patatas", "huevos", "morcilla"], allergens: ["huevo"], dietary: [], description: "Patatas fritas caseras con huevos rotos y morcilla de Burgos" },
+                { name: "Patatas con Huevos y Sobrasada", price: 15.5, category: "Patatas", ingredients: ["patatas", "huevos", "sobrasada"], allergens: ["huevo"], dietary: [], description: "Patatas fritas caseras con huevos rotos y sobrasada ibérica" },
+                { name: "Patatas con Huevos y Panceta", price: 15.5, category: "Patatas", ingredients: ["patatas", "huevos", "panceta"], allergens: ["huevo"], dietary: [], description: "Patatas fritas caseras con huevos rotos y panceta italiana" },
+                { name: "Patatas con Huevos y Chistorra", price: 15.5, category: "Patatas", ingredients: ["patatas", "huevos", "chistorra"], allergens: ["huevo"], dietary: [], description: "Patatas fritas caseras con huevos rotos y chistorra de Navarra" },
+                { name: "Patatas con Huevos", price: 11, category: "Patatas", ingredients: ["patatas", "huevos"], allergens: ["huevo"], dietary: ["vegetariano"], description: "Patatas fritas caseras con huevos rotos" }
+            ],
+            arroces: [
+                { name: "Paella de Pescado y Marisco", price: 17.7, category: "Arroces", ingredients: ["arroz", "pescado", "marisco", "fumet"], allergens: ["pescado", "marisco"], dietary: [], description: "Paella elaborada con fumet casero" },
+                { name: "Arroz Negro", price: 17.8, category: "Arroces", ingredients: ["arroz", "pescado", "marisco", "tinta de calamar"], allergens: ["pescado", "marisco"], dietary: [], description: "Arroz negro de pescado y marisco" },
+                { name: "Paella de Verduras", price: 16.5, category: "Arroces", ingredients: ["arroz", "verduras", "cúrcuma"], allergens: [], dietary: ["vegetariano", "vegano"], description: "Paella de verduras con cúrcuma" },
+                { name: "Fideuà de Pescado y Marisco", price: 16.8, category: "Arroces", ingredients: ["fideos", "pescado", "marisco"], allergens: ["gluten", "pescado", "marisco"], dietary: [], description: "Fideuà con fideos tostados" },
+                { name: "Fideuà Negra", price: 17.8, category: "Arroces", ingredients: ["fideos", "pescado", "marisco", "tinta de calamar"], allergens: ["gluten", "pescado", "marisco"], dietary: [], description: "Fideuà negra de pescado y marisco" }
+            ],
+            mar: [
+                { name: "Mejillones a la Plancha", price: 15, category: "Mariscos", ingredients: ["mejillones", "ajo", "perejil", "aceite de oliva"], allergens: ["marisco"], dietary: [], description: "Mejillones del Delta del Ebro a la plancha - Plato Estrella" },
+                { name: "Pata de Pulpo al Horno", price: 23, category: "Mariscos", ingredients: ["pulpo", "patata", "mayonesa de ajo negro"], allergens: ["marisco"], dietary: [], description: "Pulpo al horno con parmentier de patata y mayonesa de ajo negro" },
+                { name: "Coquina a la Plancha", price: 16, category: "Mariscos", ingredients: ["coquina", "aceite de oliva"], allergens: ["marisco"], dietary: [], description: "Coquina a la plancha con aceite de oliva virgen extra" },
+                { name: "Tartar de Salmón", price: 21, category: "Pescado", ingredients: ["salmón", "aguacate", "mango", "sésamo"], allergens: ["pescado", "sésamo"], dietary: [], description: "Tartar de salmón con aguacate, mango y toque de sésamo" }
+            ],
+            tierra: [
+                { name: "Dados de Filete con Foie", price: 26.9, category: "Carnes", ingredients: ["ternera", "foie", "reducción de vino tinto"], allergens: [], dietary: [], description: "Dados de filete de ternera con foie caramelizado" },
+                { name: "Filete de Ternera 200g", price: 27.9, category: "Carnes", ingredients: ["ternera", "patatas"], allergens: [], dietary: [], description: "Filete de ternera nacional de 200g con patatas fritas" },
+                { name: "Steak Tartar", price: 24.9, category: "Carnes", ingredients: ["ternera"], allergens: ["huevo"], dietary: [], description: "Steak tartar cortado a cuchillo" },
+                { name: "Secreto Ibérico", price: 25.5, category: "Carnes", ingredients: ["secreto ibérico", "patata", "pera"], allergens: [], dietary: [], description: "Secreto ibérico a baja temperatura (11 horas) con puré de patata y pera" },
+                { name: "Callos de la Conxi", price: 11.9, category: "Carnes", ingredients: ["callos", "especias"], allergens: [], dietary: [], description: "Callos tradicionales (un poco picantes)" },
+                { name: "BOU-BURGER", price: 15, category: "Hamburguesas", ingredients: ["ternera", "provolone", "panceta", "tomate", "cebolla"], allergens: ["gluten", "lácteos"], dietary: [], description: "Hamburguesa de buey con provolone, panceta italiana y patatas" },
+                { name: "VEG-BURGER", price: 15, category: "Hamburguesas", ingredients: ["hamburguesa vegetal", "queso de cabra", "cebolla", "tomate"], allergens: ["gluten", "lácteos"], dietary: ["vegetariano"], description: "Hamburguesa vegetariana con queso de cabra y patatas" }
+            ],
+            postres: [
+                { name: "Pastel de Queso", price: 7.8, category: "Postres", ingredients: ["queso", "base de galleta"], allergens: ["lácteos", "gluten", "huevo"], dietary: ["vegetariano"], description: "El megacrack de la jornada - ¡Haz tu reseña!" },
+                { name: "Postre Tasqueta", price: 7.8, category: "Postres", ingredients: ["mató", "miel", "frutos secos", "helado de café"], allergens: ["lácteos", "frutos secos"], dietary: ["vegetariano"], description: "Mel i mató con frutos secos y helado de café" },
+                { name: "Tartaleta de Plátano Flambeado", price: 8.9, category: "Postres", ingredients: ["plátano", "helado de vainilla", "chocolate"], allergens: ["lácteos", "gluten", "huevo"], dietary: ["vegetariano"], description: "Con helado de vainilla y chocolate negro caliente" },
+                { name: "Coulant sin Gluten", price: 8.9, category: "Postres", ingredients: ["chocolate negro", "helado"], allergens: ["lácteos", "huevo"], dietary: ["vegetariano", "sin-gluten"], description: "Coulant de chocolate negro con helado de vainilla" },
+                { name: "Irish Coffee", price: 8.5, category: "Postres", ingredients: ["café", "whiskey", "nata"], allergens: ["lácteos"], dietary: ["vegetariano"], description: "Irlandés en tres colores" },
+                { name: "Trufas Artesanas", price: 6.5, category: "Postres", ingredients: ["chocolate negro"], allergens: ["lácteos"], dietary: ["vegetariano"], description: "Trufas artesanas de chocolate negro" }
+            ]
+        };
+
+        const winesData = {
+            cavas: [
+                { name: "Jovani Gran Enriet 69", price: 35, type: "Cava", region: "D.O. Cava", description: "Cava crianza premium", pairing: ["tapas", "ensaladas", "mar"] },
+                { name: "Parató Brut Rosé", price: 25, type: "Cava Rosé", region: "D.O. Cava", description: "Cava rosé elegante", pairing: ["ensaladas", "mar", "postres"] },
+                { name: "Parató Brut Reserva", price: 23, type: "Cava", region: "D.O. Cava", description: "Cava brut reserva", pairing: ["tapas", "mar"] },
+                { name: "Finca Renardes Brut Nature", price: 19, type: "Cava", region: "D.O. Cava", description: "Brut nature fresco", pairing: ["tapas", "mar"] }
+            ],
+            blancos: [
+                { name: "Finca Viñoa Ribeiro", price: 34.5, type: "Blanco", region: "D.O. Ribeiro", description: "Blanco complejo y elegante", pairing: ["mar", "arroces"] },
+                { name: "Quinta Couselo Albariño", price: 27, type: "Blanco", region: "D.O. Rías Baixas", description: "Albariño aromático", pairing: ["mar", "ensaladas"] },
+                { name: "Blanc de Boira", price: 26, type: "Blanco", region: "D.O. Costers del Segre", description: "Blanco fresco", pairing: ["mar", "arroces"] },
+                { name: "Godello Pandora", price: 25, type: "Blanco", region: "VT Castilla", description: "Godello estructurado", pairing: ["mar", "tierra"] },
+                { name: "Parató Xarel·lo", price: 22, type: "Blanco", region: "D.O. Penedès", description: "Xarel·lo fresco", pairing: ["tapas", "mar"] },
+                { name: "Pandora Verdejo", price: 19, type: "Blanco", region: "D.O. Rueda", description: "Verdejo aromático", pairing: ["tapas", "ensaladas", "mar"] }
+            ],
+            rosados: [
+                { name: "Gerisena Rosat", price: 25, type: "Rosado", region: "D.O. Empordà", description: "Rosado mediterráneo", pairing: ["tapas", "ensaladas", "mar"] },
+                { name: "Vola Vola Papallona", price: 22.2, type: "Rosado", region: "D.O. Valencia", description: "Rosado fresco y divertido", pairing: ["tapas", "ensaladas"] },
+                { name: "Ramito Rosado", price: 16.5, type: "Rosado", region: "D.O. España", description: "Rosado versátil", pairing: ["tapas", "ensaladas"] }
+            ],
+            tintos: [
+                { name: "Flor de Pingus", price: 150, type: "Tinto Premium", region: "D.O. Ribera del Duero", description: "Vino excepcional de Ribera del Duero", pairing: ["tierra"] },
+                { name: "200 Monges Reserva", price: 58, type: "Tinto", region: "D.O.Ca. Rioja", description: "Rioja reserva elegante", pairing: ["tierra", "arroces"] },
+                { name: "Valtravieso Finca", price: 35, type: "Tinto", region: "D.O. Ribera del Duero", description: "Ribera del Duero potente", pairing: ["tierra"] },
+                { name: "L'Avi Tomàs Reserva", price: 33.7, type: "Tinto", region: "D.O. Montsant", description: "Montsant con personalidad", pairing: ["tierra", "arroces"] },
+                { name: "Las Cenizas", price: 31, type: "Tinto", region: "D.O. Rioja Alta", description: "Rioja Alta elegante", pairing: ["tierra"] },
+                { name: "Bruixola Priorat", price: 28, type: "Tinto", region: "D.O.Q. Priorat", description: "Priorat mineral", pairing: ["tierra"] },
+                { name: "Conde de los Andes", price: 27, type: "Tinto", region: "D.O. Rioja", description: "Rioja clásico", pairing: ["tierra", "patatas"] },
+                { name: "Coca i Fitó NU", price: 26.5, type: "Tinto", region: "D.O. Montsant", description: "Montsant moderno", pairing: ["tierra"] },
+                { name: "Perdiu Roure", price: 26, type: "Tinto", region: "D.O. Costers del Segre", description: "Costers del Segre potente", pairing: ["tierra"] },
+                { name: "Boca de Canó", price: 25, type: "Tinto", region: "D.O. Empordà", description: "Empordà mediterráneo", pairing: ["tierra", "arroces"] },
+                { name: "Pandora Toro", price: 24, type: "Tinto", region: "D.O. Toro", description: "Toro potente", pairing: ["tierra"] },
+                { name: "Ultreia", price: 21.8, type: "Tinto", region: "D.O. Bierzo", description: "Bierzo elegante", pairing: ["tierra", "patatas"] },
+                { name: "Valpincia Roble", price: 19.8, type: "Tinto", region: "D.O. Ribera del Duero", description: "Ribera accesible", pairing: ["tierra", "patatas"] }
+            ]
+        };
+
+        function TasquetaApp() {
+            const [step, setStep] = useState('welcome');
+            const [userData, setUserData] = useState({
+                email: '',
+                consent: false,
+                name: '',
+                allergies: [],
+                objective: '',
+                preferences: []
+            });
+            const [selectedDishes, setSelectedDishes] = useState([]);
+            const [recommendedWines, setRecommendedWines] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            const sendToGoogleSheets = async (data) => {
+                const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyFsfGoUoIN7DBLaATnPy01KU6ouBmz-9s0dE7rqCOWdRXoW9T0hKvwPdmCMluim1bdZw/exec';
+                
+                try {
+                    const response = await fetch(SHEET_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    console.log('Datos enviados a Google Sheets');
+                    return true;
+                } catch (error) {
+                    console.error('Error al enviar datos:', error);
+                    return false;
+                }
+            };
+
+            const getDishRecommendations = () => {
+                let recommendations = [];
+                const allDishes = Object.values(dishesData).flat();
+                
+                const safeDishes = allDishes.filter(dish => {
+                    return !userData.allergies.some(allergy => 
+                        dish.allergens.includes(allergy)
+                    );
+                });
+
+                if (userData.objective === 'health') {
+                    recommendations = safeDishes.filter(dish => 
+                        dish.dietary.includes('vegetariano') || 
+                        dish.category === 'Pescado' || 
+                        dish.category === 'Ensaladas' ||
+                        dish.category === 'Mariscos'
+                    );
+                } else {
+                    recommendations = safeDishes;
+                }
+
+                const categories = [...new Set(recommendations.map(d => d.category))];
+                const balanced = [];
+                
+                categories.forEach(cat => {
+                    const dishesInCat = recommendations.filter(d => d.category === cat);
+                    balanced.push(...dishesInCat.slice(0, 2));
+                });
+
+                return balanced.slice(0, 18);
+            };
+
+            const getWinePairing = () => {
+                if (selectedDishes.length === 0) return [];
+
+                const dishCategories = selectedDishes.map(d => d.category);
+                const allWines = [...winesData.cavas, ...winesData.blancos, ...winesData.rosados, ...winesData.tintos];
+                
+                let recommendedWineTypes = [];
+                
+                if (dishCategories.some(c => ['Pescado', 'Mariscos'].includes(c))) {
+                    recommendedWineTypes.push('Blanco', 'Cava', 'Rosado');
+                }
+                
+                if (dishCategories.some(c => ['Carnes'].includes(c))) {
+                    recommendedWineTypes.push('Tinto', 'Tinto Premium');
+                }
+                
+                if (dishCategories.some(c => ['Arroces'].includes(c))) {
+                    recommendedWineTypes.push('Blanco', 'Rosado', 'Tinto');
+                }
+                
+                if (dishCategories.some(c => ['Ensaladas', 'Vegetariano'].includes(c))) {
+                    recommendedWineTypes.push('Blanco', 'Rosado');
+                }
+
+                if (recommendedWineTypes.length === 0) {
+                    recommendedWineTypes = ['Cava', 'Blanco', 'Rosado', 'Tinto'];
+                }
+
+                const matchingWines = allWines.filter(wine => 
+                    recommendedWineTypes.includes(wine.type)
+                );
+
+                return matchingWines.slice(0, 5);
+            };
+
+            const handleFinish = async () => {
+                setLoading(true);
+                
+                const dataToSend = {
+                    timestamp: new Date().toISOString(),
+                    email: userData.email,
+                    name: userData.name,
+                    consent: userData.consent,
+                    allergies: userData.allergies.join(', '),
+                    objective: userData.objective === 'health' ? 'Saludable' : 'Disfrutar',
+                    selectedDishes: selectedDishes.map(d => d.name).join(', '),
+                    dishCategories: [...new Set(selectedDishes.map(d => d.category))].join(', '),
+                    recommendedWines: recommendedWines.map(w => w.name).join(', '),
+                    wineTypes: [...new Set(recommendedWines.map(w => w.type))].join(', ')
+                };
+
+                await sendToGoogleSheets(dataToSend);
+                
+                setLoading(false);
+                setStep('confirmation');
+            };
+
+            return (
+                <div className="min-h-screen">
+                    {step === 'welcome' && <WelcomeScreen setStep={setStep} />}
+                    {step === 'profile' && <ProfileScreen userData={userData} setUserData={setUserData} setStep={setStep} />}
+                    {step === 'recommendations' && (
+                        <RecommendationsScreen 
+                            userData={userData}
+                            selectedDishes={selectedDishes}
+                            setSelectedDishes={setSelectedDishes}
+                            getDishRecommendations={getDishRecommendations}
+                            setStep={setStep}
+                        />
+                    )}
+                    {step === 'wine-pairing' && (
+                        <WinePairingScreen 
+                            selectedDishes={selectedDishes}
+                            recommendedWines={recommendedWines}
+                            setRecommendedWines={setRecommendedWines}
+                            getWinePairing={getWinePairing}
+                            handleFinish={handleFinish}
+                            loading={loading}
+                        />
+                    )}
+                    {step === 'confirmation' && <ConfirmationScreen userData={userData} />}
+                </div>
+            );
+        }
+
+        function WelcomeScreen({ setStep }) {
+            return (
+                <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+                    <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in">
+                        <div className="text-center">
+                            <div className="mb-6">
+                                <span className="text-6xl">🍷</span>
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-playfair font-bold text-gray-800 mb-4">
+                                La Tasqueta de Caldes
+                            </h1>
+                            <p className="text-xl text-gray-600 mb-8">
+                                Recomendador Inteligente de Platos y Vinos
+                            </p>
+                            <div className="bg-purple-50 rounded-xl p-6 mb-8">
+                                <h2 className="text-lg font-semibold text-purple-900 mb-3">
+                                    ¿Qué conseguirás?
+                                </h2>
+                                <ul className="text-left space-y-2 text-gray-700">
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">✓</span>
+                                        <span>Recomendaciones personalizadas según tus gustos y necesidades</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">✓</span>
+                                        <span>Sugerencias seguras respetando tus alergias e intolerancias</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">✓</span>
+                                        <span>Maridaje perfecto de vinos para tus platos elegidos</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">✓</span>
+                                        <span>Ofertas exclusivas y novedades en tu correo</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <button
+                                onClick={() => setStep('profile')}
+                                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-4 px-8 rounded-xl text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                            >
+                                Comenzar 🚀
+                            </button>
+                            <p className="text-sm text-gray-500 mt-4">
+                                Solo te tomará 2 minutos
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ProfileScreen({ userData, setUserData, setStep }) {
+            const [errors, setErrors] = useState({});
+
+            const allergensList = [
+                'gluten', 'lácteos', 'huevo', 'pescado', 'marisco', 
+                'frutos secos', 'soja', 'apio', 'mostaza', 'sésamo'
+            ];
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newErrors = {};
+
+                if (!userData.email || !/\S+@\S+\.\S+/.test(userData.email)) {
+                    newErrors.email = 'Email válido requerido';
+                }
+                if (!userData.consent) {
+                    newErrors.consent = 'Debes aceptar para continuar';
+                }
+                if (!userData.objective) {
+                    newErrors.objective = 'Selecciona un objetivo';
+                }
+
+                if (Object.keys(newErrors).length === 0) {
+                    setStep('recommendations');
+                } else {
+                    setErrors(newErrors);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50 py-8 px-4">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="bg-white rounded-3xl shadow-xl p-8 animate-fade-in">
+                            <h2 className="text-3xl font-playfair font-bold text-gray-800 mb-6 text-center">
+                                Cuéntanos sobre ti
+                            </h2>
+                            
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Email *
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={userData.email}
+                                        onChange={(e) => setUserData({...userData, email: e.target.value})}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="tu@email.com"
+                                    />
+                                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Nombre (opcional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userData.name}
+                                        onChange={(e) => setUserData({...userData, name: e.target.value})}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="Tu nombre"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        ¿Tienes alguna alergia o intolerancia?
+                                    </label>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {allergensList.map(allergen => (
+                                            <label key={allergen} className="flex items-center space-x-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={userData.allergies.includes(allergen)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setUserData({...userData, allergies: [...userData.allergies, allergen]});
+                                                        } else {
+                                                            setUserData({...userData, allergies: userData.allergies.filter(a => a !== allergen)});
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                                />
+                                                <span className="text-sm text-gray-700 capitalize">{allergen}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                        ¿Qué buscas hoy? *
+                                    </label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setUserData({...userData, objective: 'health'})}
+                                            className={`p-6 rounded-xl border-2 transition-all ${
+                                                userData.objective === 'health'
+                                                    ? 'border-green-500 bg-green-50'
+                                                    : 'border-gray-200 hover:border-green-300'
+                                            }`}
+                                        >
+                                            <div className="text-4xl mb-2">🥗</div>
+                                            <h3 className="font-semibold text-gray-800 mb-1">Comer Saludable</h3>
+                                            <p className="text-sm text-gray-600">Opciones ligeras y nutritivas</p>
+                                        </button>
+                                        
+                                        <button
+                                            type="button"
+                                            onClick={() => setUserData({...userData, objective: 'enjoy'})}
+                                            className={`p-6 rounded-xl border-2 transition-all ${
+                                                userData.objective === 'enjoy'
+                                                    ? 'border-pink-500 bg-pink-50'
+                                                    : 'border-gray-200 hover:border-pink-300'
+                                            }`}
+                                        >
+                                            <div className="text-4xl mb-2">🎉</div>
+                                            <h3 className="font-semibold text-gray-800 mb-1">Disfrutar sin Límites</h3>
+                                            <p className="text-sm text-gray-600">Lo mejor de nuestra carta</p>
+                                        </button>
+                                    </div>
+                                    {errors.objective && <p className="text-red-500 text-sm mt-2">{errors.objective}</p>}
+                                </div>
+
+                                <div className="bg-gray-50 rounded-xl p-4">
+                                    <label className="flex items-start space-x-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={userData.consent}
+                                            onChange={(e) => setUserData({...userData, consent: e.target.checked})}
+                                            className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 mt-1"
+                                        />
+                                        <span className="text-sm text-gray-700">
+                                            Acepto recibir recomendaciones personalizadas, ofertas exclusivas y novedades de La Tasqueta de Caldes. 
+                                            Puedes darte de baja en cualquier momento. *
+                                        </span>
+                                    </label>
+                                    {errors.consent && <p className="text-red-500 text-sm mt-2">{errors.consent}</p>}
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep('welcome')}
+                                        className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-300 transition-colors"
+                                    >
+                                        Volver
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all"
+                                    >
+                                        Continuar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function RecommendationsScreen({ userData, selectedDishes, setSelectedDishes, getDishRecommendations, setStep }) {
+            const recommendations = getDishRecommendations();
+
+            const toggleDish = (dish) => {
+                if (selectedDishes.find(d => d.name === dish.name)) {
+                    setSelectedDishes(selectedDishes.filter(d => d.name !== dish.name));
+                } else {
+                    setSelectedDishes([...selectedDishes, dish]);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50 py-8 px-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+                            <h2 className="text-3xl font-playfair font-bold text-gray-800 mb-2 text-center">
+                                Platos Recomendados Para Ti
+                            </h2>
+                            <p className="text-gray-600 text-center mb-6">
+                                Selecciona los platos que te gustaría probar (mínimo 1)
+                            </p>
+                            
+                            {userData.allergies.length > 0 && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                                    <p className="text-sm text-blue-800">
+                                        ✓ Hemos filtrado todos los platos que contienen: <strong>{userData.allergies.join(', ')}</strong>
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                {recommendations.map((dish, idx) => (
+                                    <div
+                                        key={idx}
+                                        onClick={() => toggleDish(dish)}
+                                        className={`card-hover cursor-pointer rounded-xl border-2 p-6 transition-all ${
+                                            selectedDishes.find(d => d.name === dish.name)
+                                                ? 'border-purple-500 bg-purple-50'
+                                                : 'border-gray-200 hover:border-purple-300'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-start mb-3">
+                                            <h3 className="font-semibold text-gray-800 flex-1">{dish.name}</h3>
+                                            <span className="text-lg font-bold text-purple-600">{dish.price}€</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 mb-3">{dish.description}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                                {dish.category}
+                                            </span>
+                                            {dish.dietary.map((diet, i) => (
+                                                <span key={i} className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                                    {diet}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        {selectedDishes.find(d => d.name === dish.name) && (
+                                            <div className="mt-3 text-purple-600 font-semibold text-sm">
+                                                ✓ Seleccionado
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {selectedDishes.length > 0 && (
+                                <div className="bg-purple-50 rounded-xl p-6 mb-6">
+                                    <h3 className="font-semibold text-purple-900 mb-3">
+                                        Tu selección ({selectedDishes.length} platos):
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedDishes.map((dish, idx) => (
+                                            <span key={idx} className="bg-purple-200 text-purple-800 px-3 py-1 rounded-full text-sm">
+                                                {dish.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setStep('profile')}
+                                    className="flex-1 bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-300 transition-colors"
+                                >
+                                    Volver
+                                </button>
+                                <button
+                                    onClick={() => selectedDishes.length > 0 && setStep('wine-pairing')}
+                                    disabled={selectedDishes.length === 0}
+                                    className={`flex-1 font-semibold py-3 rounded-xl transition-all ${
+                                        selectedDishes.length > 0
+                                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-xl transform hover:scale-105'
+                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                >
+                                    Ver Maridaje de Vinos 🍷
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function WinePairingScreen({ selectedDishes, recommendedWines, setRecommendedWines, getWinePairing, handleFinish, loading }) {
+            useEffect(() => {
+                setRecommendedWines(getWinePairing());
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-gray-50 py-8 px-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="bg-white rounded-3xl shadow-xl p-8">
+                            <h2 className="text-3xl font-playfair font-bold text-gray-800 mb-2 text-center">
+                                Maridaje Perfecto Para Tus Platos
+                            </h2>
+                            <p className="text-gray-600 text-center mb-8">
+                                Basado en tu selección, estos vinos maridan perfectamente
+                            </p>
+
+                            {recommendedWines.length > 0 && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                    {recommendedWines.map((wine, idx) => (
+                                        <div key={idx} className="card-hover rounded-xl border-2 border-gray-200 p-6">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="text-4xl wine-bottle">🍷</div>
+                                                <span className="text-xl font-bold text-red-700">{wine.price}€</span>
+                                            </div>
+                                            <h3 className="font-semibold text-gray-800 mb-2">{wine.name}</h3>
+                                            <p className="text-sm text-gray-600 mb-3">{wine.description}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                                                    {wine.type}
+                                                </span>
+                                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                                    {wine.region}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-6">
+                                <h3 className="font-semibold text-purple-900 mb-3 text-center">
+                                    Resumen de tu experiencia
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 className="font-semibold text-gray-700 mb-2">Platos seleccionados:</h4>
+                                        <ul className="text-sm text-gray-600 space-y-1">
+                                            {selectedDishes.map((dish, idx) => (
+                                                <li key={idx}>• {dish.name}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-700 mb-2">Vinos recomendados:</h4>
+                                        <ul className="text-sm text-gray-600 space-y-1">
+                                            {recommendedWines.map((wine, idx) => (
+                                                <li key={idx}>• {wine.name}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleFinish}
+                                disabled={loading}
+                                className={`w-full font-semibold py-4 rounded-xl transition-all ${
+                                    loading
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-xl transform hover:scale-105'
+                                }`}
+                            >
+                                {loading ? 'Guardando...' : 'Finalizar y Guardar Mis Preferencias ✨'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ConfirmationScreen({ userData }) {
+            return (
+                <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+                    <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in text-center">
+                        <div className="text-6xl mb-6">🎉</div>
+                        <h2 className="text-4xl font-playfair font-bold text-gray-800 mb-4">
+                            ¡Gracias {userData.name || 'amigo'}!
+                        </h2>
+                        <p className="text-xl text-gray-600 mb-8">
+                            Tus preferencias han sido guardadas exitosamente
+                        </p>
+                        
+                        <div className="bg-purple-50 rounded-xl p-6 mb-8 text-left">
+                            <h3 className="font-semibold text-purple-900 mb-3">¿Qué sigue?</h3>
+                            <ul className="space-y-2 text-gray-700">
+                                <li className="flex items-start">
+                                    <span className="text-purple-500 mr-2">📧</span>
+                                    <span>Recibirás un email de confirmación en <strong>{userData.email}</strong></span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="text-purple-500 mr-2">🎁</span>
+                                    <span>Te enviaremos ofertas exclusivas según tus gustos</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="text-purple-500 mr-2">🍷</span>
+                                    <span>Serás el primero en conocer nuevos platos y vinos</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="text-purple-500 mr-2">🎄</span>
+                                    <span>Campaña especial de Navidad próximamente</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="space-y-4">
+                            
+                                href="https://www.latasquetadecaldes.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all"
+                            >
+                                Visitar nuestra web
+                            </a>
+                            
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="block w-full bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-300 transition-colors"
+                            >
+                                Hacer otra recomendación
+                            </button>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-gray-200">
+                            <p className="text-sm text-gray-500">
+                                Síguenos en Instagram: <a href="https://instagram.com/latasquetadecaldes" className="text-purple-600 font-semibold">@latasquetadecaldes</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<TasquetaApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
