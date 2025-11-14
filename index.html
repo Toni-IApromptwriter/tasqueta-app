@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Tasqueta de Caldes - Carta Digital</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --tasqueta-blue: #2C5F7D;
+            --tasqueta-blue-dark: #1E4254;
+            --tasqueta-blue-light: #5A92B3;
+            --tasqueta-red: #DC291E;
+            --tasqueta-black: #1a1a1a;
+            --tasqueta-gray: #707070;
+            --tasqueta-cream: #F8FAFB;
+            --tasqueta-white: #FFFFFF;
+            --tasqueta-gold: #D4AF37;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--tasqueta-cream);
+            color: var(--tasqueta-black);
+            line-height: 1.6;
+        }
+        
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .gradient-bg { background: linear-gradient(135deg, var(--tasqueta-blue) 0%, var(--tasqueta-blue-dark) 100%); }
+        
+        .animate-fade-in { animation: fadeIn 0.6s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-slide-down { animation: slideDown 0.4s ease-out; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(44, 95, 125, 0.15);
+        }
+        
+        .imperdible-card {
+            border: 3px solid var(--tasqueta-gold);
+            background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
+            position: relative;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-imperdible { background: var(--tasqueta-gold); color: white; }
+        .badge-chef { background: var(--tasqueta-blue); color: white; }
+        .badge-trending { background: #fff3cd; color: #856404; }
+        .badge-novedad { background: #cce5ff; color: #004085; }
+        
+        .btn-primary {
+            background: var(--tasqueta-blue);
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--tasqueta-blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(44, 95, 125, 0.3);
+        }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--tasqueta-blue);
+            border: 2px solid var(--tasqueta-blue);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: var(--tasqueta-blue);
+            color: white;
+        }
+        
+        input[type="text"], input[type="email"], input[type="tel"], input[type="date"] {
+            border: 2px solid var(--tasqueta-gray);
+            transition: all 0.3s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--tasqueta-blue);
+            box-shadow: 0 0 0 3px rgba(44, 95, 125, 0.1);
+        }
+        
+        .floating-contact {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+        
+        .contact-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .contact-btn:hover { transform: scale(1.1); }
+        .whatsapp-btn { background: #25D366; color: white; }
+        .phone-btn { background: var(--tasqueta-blue); color: white; }
+        
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            padding: 12px 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .top-bar-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid var(--tasqueta-blue);
+            color: var(--tasqueta-blue);
+            background: white;
+        }
+        .top-bar-btn:hover {
+            background: var(--tasqueta-blue);
+            color: white;
+        }
+        .top-bar-btn.gold {
+            border-color: var(--tasqueta-gold);
+            color: var(--tasqueta-gold);
+        }
+        .top-bar-btn.gold:hover {
+            background: var(--tasqueta-gold);
+            color: white;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--tasqueta-blue);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .content-with-topbar { padding-top: 80px; }
+        .price-tag { color: var(--tasqueta-blue); font-weight: 700; font-size: 1.25rem; }
+        .section-header { color: var(--tasqueta-blue); border-bottom: 3px solid var(--tasqueta-blue); }
+        
+        .progress-bar { height: 6px; background: #e0e0e0; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--tasqueta-blue); transition: width 0.5s ease; }
+        
+        .spinner {
+            border: 3px solid rgba(44, 95, 125, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--tasqueta-blue);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .selected-card {
+            border-color: var(--tasqueta-blue) !important;
+            background: rgba(44, 95, 125, 0.05) !important;
+            box-shadow: 0 8px 20px rgba(44, 95, 125, 0.2);
+        }
+        
+        .allergen-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+        }
+        
+        .carta-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .dish-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .dish-item:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        @media (max-width: 768px) {
+            .contact-btn { width: 50px; height: 50px; font-size: 24px; }
+            .top-bar { padding: 8px 10px; }
+            .top-bar-btn { padding: 6px 12px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxyIHOHKi5EJku1-HEKgVwZoxCckFWCF_Ssoovfc6J1OHY48-4hYzB77vM1F-uT_zls_g/exec';
+        const WHATSAPP_NUMBER = '+34661666161';
+        const PHONE_NUMBER = '+34937913272';
+
+        // BASE DE DATOS COMPLETA DE PLATOS
+        const dishesDatabase = {
+            imperdibles: [
+                { id: 1, name: "Secreto Ibérico", price: 25.50, description: "Secreto ibérico cocinado ONCE horas a baja temperatura con puré de patata y pera", category: "Carnes", allergens: [], badge: "imperdible" },
+                { id: 2, name: "Mejillones a la Plancha", price: 15.00, description: "Mejillones del Delta de l'Ebre con ajo, perejil y aceite de oliva - Plato Estrella", category: "Mariscos", allergens: ["moluscos"], badge: "imperdible" },
+                { id: 3, name: "Chips de Puerro", price: 9.80, description: "Chips crujientes de puerro con queso de cabra y miel de caña - Puro vicio", category: "Vegetariano", allergens: ["lácteos"], badge: "imperdible" },
+                { id: 4, name: "Patatas Bravas", price: 9.80, description: "Las BRAVAS - Simplemente hay que probarlas", category: "Clásicos", allergens: ["huevo"], badge: "imperdible" },
+                { id: 5, name: "Pastel de Queso", price: 7.80, description: "El megacrack - ¡Ponlo en tu ranking!", category: "Postres", allergens: ["gluten", "lácteos", "huevo"], badge: "imperdible" }
+            ],
+            tapas: [
+                { id: 10, name: "Jamón Ibérico", price: 24.00, description: "Plato de jamón ibérico de bellota", category: "Ibéricos", allergens: [] },
+                { id: 11, name: "Foie Micuit de Girona", price: 16.90, description: "Foie micuit con tostadas crujientes de Pa Solà", category: "Gourmet", allergens: ["gluten"] },
+                { id: 12, name: "Anchoas del Cantábrico", price: 15.00, description: "6 filetes de anchoa con pan de cristal tostado y tomate", category: "Conservas", allergens: ["gluten", "pescado"] },
+                { id: 13, name: "Croquetas de Pollo", price: 9.60, description: "Croquetas caseras (4 unidades)", category: "Clásicos", allergens: ["gluten", "lácteos", "huevo", "apio"] },
+                { id: 14, name: "Croquetas de Espinacas", price: 9.60, description: "Con gorgonzola y nueces (4 ud)", category: "Vegetariano", allergens: ["gluten", "lácteos", "huevo", "frutos secos"] },
+                { id: 15, name: "Croquetas de Boletus y Trufa", price: 3.50, description: "Boletus edulis y trufa (por unidad)", category: "Vegetariano", allergens: ["gluten", "lácteos", "sulfitos"], badge: "chef" },
+                { id: 16, name: "Croquetas de Gamba Roja", price: 14.00, description: "Gamba roja (4 ud)", category: "Mariscos", allergens: ["gluten", "lácteos", "huevo", "crustáceos"] },
+                { id: 17, name: "Gyoza de Verdura", price: 8.00, description: "Gyoza vegetariana (4 ud)", category: "Asiático", allergens: ["gluten", "soja"] },
+                { id: 18, name: "Gyoza de Gamba", price: 9.60, description: "Gyoza de gamba (4 ud)", category: "Asiático", allergens: ["gluten", "soja", "crustáceos"] },
+                { id: 19, name: "Gyoza de Pollo", price: 8.80, description: "Pollo y verdura (4 ud)", category: "Asiático", allergens: ["gluten", "soja"] },
+                { id: 20, name: "Torrezno de Soria", price: 4.50, description: "Cansalada adobada de Soria", category: "Ibéricos", allergens: [] },
+                { id: 21, name: "Boquerones en Vinagre", price: 6.90, description: "Del Cantábrico - Carnosos", category: "Conservas", allergens: ["pescado"] },
+                { id: 22, name: "Queso Curado de Oveja", price: 8.80, description: "100% oveja", category: "Quesos", allergens: ["lácteos"] },
+                { id: 23, name: "Fuet de Calidad", price: 4.50, description: "Cortado al momento", category: "Ibéricos", allergens: [] },
+                { id: 24, name: "Morcilla de Arroz", price: 6.80, description: "De Burgos", category: "Ibéricos", allergens: [] }
+            ],
+            ensaladas: [
+                { id: 30, name: "Ensalada con Queso de Cabra", price: 14.80, description: "Con jamón ibérico, nueces, membrillo y vinagreta de vermut", category: "Ensaladas", allergens: ["lácteos", "frutos secos", "mostaza", "sulfitos"] },
+                { id: 31, name: "Burrata Italiana", price: 15.00, description: "Burrata artesana con carpaccio de tomate y aceite de oliva", category: "Ensaladas", allergens: ["lácteos"] },
+                { id: 32, name: "Ensalada con Ventresca", price: 16.90, description: "Ventresca del Cantábrico con tomate y cebolla tierna", category: "Ensaladas", allergens: ["pescado"] }
+            ],
+            patatas: [
+                { id: 40, name: "Patatas con Jamón Ibérico", price: 17.50, description: "Con huevos rotos y jamón ibérico - 25 años de tradición", category: "Patatas", allergens: ["huevo"], badge: "trending" },
+                { id: 41, name: "Patatas con Foie", price: 17.50, description: "Con huevos rotos y foie", category: "Patatas", allergens: ["huevo"] },
+                { id: 42, name: "Patatas con Verduras", price: 15.50, description: "Con huevos rotos y verduras", category: "Patatas", allergens: ["huevo"] },
+                { id: 43, name: "Patatas con Cebolla Caramelizada", price: 15.50, description: "Con huevos rotos", category: "Patatas", allergens: ["huevo"] },
+                { id: 44, name: "Patatas con Morcilla", price: 15.50, description: "Con huevos y morcilla de Burgos", category: "Patatas", allergens: ["huevo"] },
+                { id: 45, name: "Patatas con Sobrasada", price: 15.50, description: "Con huevos y sobrasada ibérica", category: "Patatas", allergens: ["huevo"] },
+                { id: 46, name: "Patatas con Panceta", price: 15.50, description: "Con huevos y panceta italiana", category: "Patatas", allergens: ["huevo"] },
+                { id: 47, name: "Patatas con Chistorra", price: 15.50, description: "Con huevos y chistorra de Navarra", category: "Patatas", allergens: ["huevo"] },
+                { id: 48, name: "Patatas con Huevos", price: 11.00, description: "Nuestra fórmula de hace 25 años", category: "Patatas", allergens: ["huevo"] }
+            ],
+            arroces: [
+                { id: 50, name: "Arroz Negro", price: 17.80, description: "Arroz negro con langostinos y zamburiñas con alioli de azafrán y yuzu", category: "Arroces", allergens: ["crustáceos", "moluscos", "huevo"], badge: "chef", minPersonas: 2, paraLlevar: true },
+                { id: 51, name: "Paella de Pescado y Marisco", price: 17.70, description: "Con fumet casero - Mín. 2 personas - Para llevar", category: "Arroces", allergens: ["pescado", "moluscos", "crustáceos"], minPersonas: 2, paraLlevar: true },
+                { id: 52, name: "Paella de Verduras", price: 16.50, description: "Con cúrcuma - Mín. 2 personas - Para llevar", category: "Arroces", allergens: [], minPersonas: 2, paraLlevar: true },
+                { id: 53, name: "Fideuà de Pescado y Marisco", price: 16.80, description: "Fideos finos tostados - Mín. 2 personas - Para llevar", category: "Arroces", allergens: ["gluten", "pescado", "moluscos", "crustáceos"], minPersonas: 2, paraLlevar: true },
+                { id: 54, name: "Fideuà Negra", price: 22.80, description: "Con zamburiñas - Mín. 2 personas - Para llevar", category: "Arroces", allergens: ["gluten", "pescado", "moluscos", "crustáceos", "huevo"], minPersonas: 2, paraLlevar: true }
+            ],
+            mar: [
+                { id: 60, name: "Pata de Pulpo al Horno", price: 23.00, description: "Con parmentier de patata y mayonesa de ajo negro", category: "Mariscos", allergens: ["moluscos", "huevo"] },
+                { id: 61, name: "Coquina a la Plancha", price: 16.00, description: "Con aceite de oliva virgen extra", category: "Mariscos", allergens: ["moluscos"] },
+                { id: 62, name: "Tartar de Salmón", price: 21.00, description: "Con aguacate, mango, sésamo y tostadas", category: "Pescados", allergens: ["pescado", "gluten", "sésamo"] }
+            ],
+            tierra: [
+                { id: 70, name: "Dados de Filete con Foie", price: 26.90, description: "Con foie caramelizado y reducción de vino tinto", category: "Carnes", allergens: [] },
+                { id: 71, name: "Filete de Ternera 200g", price: 27.90, description: "Ternera nacional con patatas fritas", category: "Carnes", allergens: [] },
+                { id: 72, name: "Steak Tartar", price: 24.90, description: "Cortado a cuchillo - Pide el punto de picante", category: "Carnes", allergens: ["huevo", "mostaza"] },
+                { id: 73, name: "Costillas de Cerdo BBQ", price: 25.00, description: "Costillar a baja temperatura con salsa barbacoa", category: "Carnes", allergens: [] },
+                { id: 74, name: "Vedella amb Bolets", price: 15.80, description: "Ternera con setas - Premio Girona 2024", category: "Carnes", allergens: [], badge: "novedad" },
+                { id: 75, name: "Callos de la Conxi", price: 11.90, description: "¿Picantes? Un poco sí", category: "Carnes", allergens: [] },
+                { id: 76, name: "BOU-BURGER", price: 15.00, description: "De buey con provolone, panceta italiana, cebolla caramelizada y mostaza Dijon", category: "Hamburguesas", allergens: ["gluten", "lácteos", "huevo", "mostaza"] },
+                { id: 77, name: "VEG-BURGER", price: 15.00, description: "Vegetariana con queso de cabra y cebolla caramelizada", category: "Hamburguesas", allergens: ["gluten", "lácteos", "huevo"] }
+            ],
+            postres: [
+                { id: 80, name: "Postre Tasqueta", price: 7.80, description: "Mató y miel con frutos secos y helado de café", category: "Postres", allergens: ["lácteos", "frutos secos"] },
+                { id: 81, name: "Mató con Miel", price: 6.10, description: "Postre tradicional catalán", category: "Postres", allergens: ["lácteos"] },
+                { id: 82, name: "Tartaleta de Plátano Flambeado", price: 8.90, description: "Al brandy con helado y chocolate", category: "Postres", allergens: ["gluten", "lácteos", "huevo"] },
+                { id: 83, name: "Coulant sin Gluten", price: 8.90, description: "De chocolate con helado", category: "Postres", allergens: ["lácteos", "huevo"] },
+                { id: 84, name: "Irish Coffee", price: 8.50, description: "Whiskey, café y nata", category: "Postres", allergens: ["lácteos"] },
+                { id: 85, name: "Trufas Artesanas", price: 6.50, description: "De chocolate negro", category: "Postres", allergens: ["lácteos"] },
+                { id: 86, name: "Helado Vegano", price: 5.90, description: "Limón o frambuesa", category: "Helados", allergens: [] },
+                { id: 87, name: "Helados Variados", price: 5.90, description: "Chocolate, avellana, vainilla o café", category: "Helados", allergens: ["lácteos", "frutos secos"] },
+                { id: 90, name: "Crepe con Azúcar", price: 5.30, description: "Crepe clásico", category: "Crepes", allergens: ["gluten", "lácteos", "huevo"] },
+                { id: 91, name: "Crepe con Nutella", price: 6.90, description: "Con Nutella", category: "Crepes", allergens: ["gluten", "lácteos", "huevo", "frutos secos"] },
+                { id: 92, name: "Crepe con Chocolate Negro", price: 7.80, description: "Para amantes de lo puro", category: "Crepes", allergens: ["gluten", "lácteos", "huevo"] },
+                { id: 93, name: "Crepe con Mermelada", price: 6.30, description: "Melocotón o arándanos", category: "Crepes", allergens: ["gluten", "lácteos", "huevo"] },
+                { id: 94, name: "Crepe con Nata y Nueces", price: 8.00, description: "Nata montada y nueces", category: "Crepes", allergens: ["gluten", "lácteos", "huevo", "frutos secos"] },
+                { id: 95, name: "Crepe con Nata y Chocolate", price: 8.80, description: "Nata y chocolate negro", category: "Crepes", allergens: ["gluten", "lácteos", "huevo"] },
+                { id: 96, name: "Crepe con Nueces y Chocolate", price: 8.80, description: "Nueces y chocolate", category: "Crepes", allergens: ["gluten", "lácteos", "huevo", "frutos secos"] },
+                { id: 97, name: "Crepe Completo", price: 9.50, description: "Nata, nueces y chocolate", category: "Crepes", allergens: ["gluten", "lácteos", "huevo", "frutos secos"] },
+                { id: 98, name: "Crepe Flambeado", price: 8.90, description: "Con Grand Marnier - ¡Fuego en la mesa!", category: "Crepes", allergens: ["gluten", "lácteos", "huevo"] }
+            ]
+        };
+
+        // CARTA DE VINOS COMPLETA - LA PARROQUIA DEL VINO
+        const winesDatabase = {
+            blancos: [
+                { id: 101, name: "Finca Viñoa - Ribeiro Paraje Penaboa 2020", type: "Blanco", price: 34.50, region: "D.O. Ribeiro" },
+                { id: 102, name: "Quinta Couselo Albariño", type: "Blanco", price: 27.00, region: "D.O. Rías Baixas" },
+                { id: 103, name: "Blanc de Boira", type: "Blanco", price: 26.00, region: "D.O. Costers del Segre" },
+                { id: 104, name: "Godello (Pandora)", type: "Blanco", price: 25.00, region: "Castilla" },
+                { id: 105, name: "Parató Xarel·lo", type: "Blanco", price: 22.00, region: "D.O. Penedès" },
+                { id: 106, name: "Mysti Blanc", type: "Blanco", price: 22.00, region: "D.O. Catalunya" },
+                { id: 107, name: "El Jardín de la Emperatriz", type: "Blanco", price: 21.00, region: "D.O.Ca. Rioja" },
+                { id: 108, name: "Pandora Verdejo", type: "Blanco", price: 21.00, region: "D.O. Rueda" },
+                { id: 109, name: "Ramito Blanco", type: "Blanco", price: 16.50, region: "D.O. España" },
+                { id: 110, name: "Creciente - Albariño", type: "Blanco", price: 22.50, region: "D.O. Rías Baixas" },
+                { id: 111, name: "Cunqueiro - Albariño", type: "Blanco", price: 19.00, region: "D.O. Ribeiro" },
+                { id: 112, name: "Atalien - Albariño (Raúl Pérez)", type: "Blanco", price: 29.00, region: "D.O. Rías Baixas" }
+            ],
+            cavas: [
+                { id: 201, name: "Jovani Gran Enriet 69 crianza", type: "Cava", price: 35.00, region: "D.O. Cava" },
+                { id: 202, name: "Parató Brut Rosé (Amor)", type: "Cava Rosé", price: 25.00, region: "D.O. Cava" },
+                { id: 203, name: "Ancestral", type: "Cava", price: 24.70, region: "D.O. Cava" },
+                { id: 204, name: "Parató Brut Reserva", type: "Cava", price: 23.00, region: "D.O. Cava" },
+                { id: 205, name: "Finca Renardes Brut Nature", type: "Cava", price: 19.00, region: "D.O. Cava" }
+            ],
+            rosados: [
+                { id: 301, name: "Viuda Negra – Prado las Almas", type: "Rosado", price: 31.30, region: "D.O. Rioja (Alavesa), Tempranillo" },
+                { id: 302, name: "Vola Vola Papallona", type: "Rosado", price: 22.20, region: "D.O. Valencia" },
+                { id: 303, name: "Ramito Rosado", type: "Rosado", price: 16.50, region: "D.O. España" }
+            ],
+            tintos: [
+                { id: 401, name: "Flor de Pingus 2016", type: "Tinto", price: 130.00, region: "D.O. Ribera del Duero" },
+                { id: 402, name: "200 Monges Reserva 2012", type: "Tinto", price: 58.00, region: "D.O.Ca. Rioja" },
+                { id: 403, name: "Valtravieso Finca 2020", type: "Tinto", price: 35.00, region: "D.O. Ribera del Duero" },
+                { id: 404, name: "L'Avi Tomàs Reserva 2020/21", type: "Tinto", price: 33.70, region: "D.O. Montsant" },
+                { id: 405, name: "Las Cenizas 2020", type: "Tinto", price: 31.00, region: "D.O. Rioja Alta" },
+                { id: 406, name: "Bruixola Priorat 2018", type: "Tinto", price: 28.00, region: "D.O.Q. Priorat" },
+                { id: 407, name: "Conde de los Andes 2016", type: "Tinto", price: 27.00, region: "D.O. Rioja" },
+                { id: 408, name: "Coca i Fitó NU", type: "Tinto", price: 28.50, region: "D.O. Montsant" },
+                { id: 409, name: "Perdiu Roure", type: "Tinto", price: 26.00, region: "D.O. Costers del Segre" },
+                { id: 410, name: "Boca de Canó", type: "Tinto", price: 25.00, region: "D.O. Empordà" },
+                { id: 411, name: "Pandora Toro", type: "Tinto", price: 24.00, region: "D.O. Toro" },
+                { id: 412, name: "L'Avi Tomàs Crianza 2021", type: "Tinto", price: 23.50, region: "D.O. Montsant" },
+                { id: 413, name: "Ultreia", type: "Tinto", price: 22.50, region: "D.O. Bierzo" },
+                { id: 414, name: "Valpincia Roble", type: "Tinto", price: 19.80, region: "D.O. Ribera del Duero" },
+                { id: 415, name: "Vallegarcía - Syrah de terciopelo", type: "Tinto", price: 38.00, region: "D.O. Pago Vallegarcía" },
+                { id: 416, name: "Carpetano - Garnachas de Madrid", type: "Tinto", price: 26.00, region: "D.O. Vinos de Madrid" },
+                { id: 417, name: "Finca Las Dueñas (Francisco Barona)", type: "Tinto", price: 97.00, region: "Ribera del Duero" }
+            ],
+            magnums: [
+                { id: 501, name: "Muriel Crianza Magnum", type: "Magnum", price: 37.00, region: "D.O.Ca. Rioja" },
+                { id: 502, name: "Conde de los Andes Magnum 2013", type: "Magnum", price: 69.00, region: "D.O.Ca. Rioja" }
+            ]
+        };
+
+        const allergensList = ["gluten", "crustáceos", "huevo", "pescado", "cacahuetes", "soja", "lácteos", "frutos secos", "apio", "mostaza", "sésamo", "sulfitos", "altramuces", "moluscos"];
+        const objectives = ["Disfrutar de una buena comida", "Descubrir nuevos sabores", "Compartir con amigos/familia", "Celebrar algo especial", "Comer saludable", "Probar productos locales"];
+
+        const ALLERGEN_WARNING = `⚠️ INFORMACIÓN IMPORTANTE SOBRE ALÉRGENOS
+
+En nuestra cocina elaboramos todos nuestros platos con ingredientes frescos que pueden contener alérgenos. Nuestras instalaciones están expuestas a trazas de todos los alérgenos declarados.
+
+Si padeces alergias o intolerancias graves, te recomendamos contactar con nuestro personal antes de realizar tu pedido. Estaremos encantados de asesorarte y ayudarte a elegir la mejor opción para ti.
+
+Tu seguridad es nuestra prioridad.`;
+
+        const LOPD_TEXT = `POLÍTICA DE PRIVACIDAD
+
+De conformidad con el Reglamento (UE) 2016/679 (RGPD), te informamos:
+
+RESPONSABLE DEL TRATAMIENTO
+La Tasqueta de Caldes
+C. La Riera 10, Caldes d'Estrac
+Teléfono: 937 913 272
+Email: info@latasquetadecaldes.com
+
+FINALIDAD
+Los datos personales que nos facilites serán utilizados para:
+- Gestionar tu registro
+- Enviarte recomendaciones personalizadas
+- Informarte sobre promociones y novedades
+- Enviarte una sorpresa en tu cumpleaños
+
+BASE LEGAL: Tu consentimiento expreso
+
+DERECHOS: Acceso, rectificación, supresión, limitación, portabilidad y oposición escribiendo a info@latasquetadecaldes.com
+
+CONSERVACIÓN: Mientras no solicites su supresión`;
+
+        function App() {
+            const [currentView, setCurrentView] = useState('welcome');
+            const [step, setStep] = useState(1);
+            const [formData, setFormData] = useState({
+                name: '', email: '', phone: '', birthday: '', consent: false,
+                allergies: [], objective: '', selectedDishes: [], selectedWines: []
+            });
+            const [recommendations, setRecommendations] = useState({ dishes: [], wines: [] });
+            const [loading, setLoading] = useState(false);
+            const [submitted, setSubmitted] = useState(false);
+            const [showImprescindibles, setShowImprescindibles] = useState(false);
+            const [showVinos, setShowVinos] = useState(false);
+            const [showLOPD, setShowLOPD] = useState(false);
+            const [showAllergenWarning, setShowAllergenWarning] = useState(false);
+
+            const getBadgeIcon = (badge) => ({
+                'imperdible': '🏆', 'temporada': '🌱', 'novedad': '🆕', 'chef': '👨‍🍳', 'trending': '🔥'
+            }[badge] || '');
+
+            const getBadgeClass = (badge) => `badge badge-${badge}`;
+
+            const filterDishesByAllergies = (dishes) => {
+                if (formData.allergies.length === 0) return dishes;
+                return dishes.filter(dish => !dish.allergens.some(allergen => formData.allergies.includes(allergen)));
+            };
+
+            const generateRecommendations = () => {
+                const allDishes = [...Object.values(dishesDatabase).flat()];
+                const filtered = filterDishesByAllergies(allDishes);
+                const imperdibles = filtered.filter(d => d.badge === 'imperdible');
+                const others = filtered.filter(d => d.badge !== 'imperdible');
+                const shuffledOthers = others.sort(() => 0.5 - Math.random());
+                const selected = [...imperdibles.slice(0, 3), ...shuffledOthers.slice(0, 5)];
+                
+                const allWines = [...Object.values(winesDatabase).flat()];
+                const wineRecommendations = allWines.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+                setRecommendations({ dishes: selected.slice(0, 8), wines: wineRecommendations });
+            };
+
+            const handleSubmit = async () => {
+                setLoading(true);
+                try {
+                    await fetch(GOOGLE_SHEET_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            timestamp: new Date().toISOString(),
+                            ...formData,
+                            allergies: formData.allergies.join(', ') || 'ninguna',
+                            selectedDishes: formData.selectedDishes.map(id => recommendations.dishes.find(d => d.id === id)?.name).join(', '),
+                            selectedWines: formData.selectedWines.map(id => recommendations.wines.find(w => w.id === id)?.name).join(', ')
+                        })
+                    });
+                    setSubmitted(true);
+                } catch (error) {
+                    setSubmitted(true);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const toggleDish = (dishId) => {
+                setFormData(prev => ({
+                    ...prev,
+                    selectedDishes: prev.selectedDishes.includes(dishId)
+                        ? prev.selectedDishes.filter(id => id !== dishId)
+                        : [...prev.selectedDishes, dishId]
+                }));
+            };
+
+            const toggleWine = (wineId) => {
+                setFormData(prev => ({
+                    ...prev,
+                    selectedWines: prev.selectedWines.includes(wineId)
+                        ? prev.selectedWines.filter(id => id !== wineId)
+                        : [...prev.selectedWines, wineId]
+                }));
+            };
+
+            // COMPONENTES
+            const FloatingContactButtons = () => (
+                <div className="floating-contact">
+                    <a href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, '')}`} target="_blank" rel="noopener noreferrer" className="contact-btn whatsapp-btn" title="WhatsApp">💬</a>
+                    <a href={`tel:${PHONE_NUMBER}`} className="contact-btn phone-btn" title="Llamar">📞</a>
+                </div>
+            );
+
+            const TopBar = () => {
+                if (currentView === 'welcome') return null;
+                return (
+                    <div className="top-bar">
+                        <button onClick={() => setShowImprescindibles(true)} className="top-bar-btn gold">🏆 Imprescindibles</button>
+                        <button onClick={() => setShowVinos(true)} className="top-bar-btn">🍷 Bodega</button>
+                        <button onClick={() => setShowAllergenWarning(true)} className="top-bar-btn">⚠️ Alérgenos</button>
+                    </div>
+                );
+            };
+
+            const ImprescindiblesModal = () => !showImprescindibles ? null : (
+                <div className="modal-overlay" onClick={() => setShowImprescindibles(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setShowImprescindibles(false)}>×</button>
+                        <h2 className="font-playfair text-3xl mb-4" style={{color: 'var(--tasqueta-gold)'}}>🏆 Los Imprescindibles</h2>
+                        <p className="text-lg mb-6 text-gray-600">No pienses, solo disfruta</p>
+                        <div className="space-y-4">
+                            {dishesDatabase.imperdibles.map(dish => (
+                                <div key={dish.id} className="imperdible-card p-4 rounded-xl">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-lg">{dish.name}</h3>
+                                        <span className="price-tag">{dish.price}€</span>
+                                    </div>
+                                    <p className="text-sm text-gray-600">{dish.description}</p>
+                                    {dish.allergens.length > 0 && (
+                                        <p className="text-xs text-gray-500 mt-2"><strong>Alérgenos:</strong> {dish.allergens.join(', ')}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const VinosModal = () => !showVinos ? null : (
+                <div className="modal-overlay" onClick={() => setShowVinos(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setShowVinos(false)}>×</button>
+                        <h2 className="font-playfair text-3xl mb-4" style={{color: 'var(--tasqueta-blue)'}}>🍷 La Parroquia del Vino</h2>
+                        <p className="text-lg mb-6 text-gray-600">Si eres de nuestra parroquia, el vino es tu religión... Amén.</p>
+                        
+                        {Object.entries(winesDatabase).map(([category, wines]) => (
+                            <div key={category} className="mb-6">
+                                <h3 className="font-bold text-xl mb-3 capitalize">{category}</h3>
+                                <div className="space-y-2">
+                                    {wines.map(wine => (
+                                        <div key={wine.id} className="border-b border-gray-200 pb-2">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <h4 className="font-semibold text-sm">{wine.name}</h4>
+                                                    <p className="text-xs text-gray-600">{wine.region}</p>
+                                                </div>
+                                                <span className="font-bold" style={{color: 'var(--tasqueta-blue)'}}>{wine.price}€</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const AllergenWarningModal = () => !showAllergenWarning ? null : (
+                <div className="modal-overlay" onClick={() => setShowAllergenWarning(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setShowAllergenWarning(false)}>×</button>
+                        <div className="allergen-warning">
+                            <pre style={{whiteSpace: 'pre-wrap', fontFamily: 'Inter'}}>{ALLERGEN_WARNING}</pre>
+                        </div>
+                        <div className="mt-6 text-center">
+                            <a href={`https://wa.me/${WHATSAPP_NUMBER.replace(/\+/g, '')}`} target="_blank" rel="noopener noreferrer" className="btn-primary px-6 py-3 rounded-xl font-semibold inline-block">
+                                Contactar por WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const LOPDModal = () => !showLOPD ? null : (
+                <div className="modal-overlay" onClick={() => setShowLOPD(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setShowLOPD(false)}>×</button>
+                        <h2 className="font-playfair text-2xl mb-4" style={{color: 'var(--tasqueta-blue)'}}>Política de Privacidad</h2>
+                        <div style={{whiteSpace: 'pre-wrap', lineHeight: '1.6'}}>{LOPD_TEXT}</div>
+                    </div>
+                </div>
+            );
+
+            // PANTALLAS
+            if (submitted) {
+                return (
+                    <>
+                        <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full text-center animate-fade-in">
+                                <div className="text-6xl mb-6">🎉</div>
+                                <h1 className="font-playfair text-4xl md:text-5xl mb-4" style={{color: 'var(--tasqueta-blue)'}}>¡Gracias {formData.name}!</h1>
+                                <p className="text-xl mb-6 text-gray-600">Tus preferencias han sido guardadas exitosamente</p>
+                                <div className="bg-gray-50 rounded-2xl p-6 mb-6 text-left">
+                                    <h3 className="font-bold mb-4">¿Qué sigue?</h3>
+                                    <ul className="space-y-3">
+                                        <li className="flex items-start gap-3"><span className="text-2xl">📧</span><span className="text-sm">Recibirás un email de confirmación en <strong>{formData.email}</strong></span></li>
+                                        <li className="flex items-start gap-3"><span className="text-2xl">🎁</span><span className="text-sm">Te enviaremos ofertas exclusivas según tus gustos</span></li>
+                                        <li className="flex items-start gap-3"><span className="text-2xl">🍷</span><span className="text-sm">Serás el primero en conocer nuevos platos y vinos</span></li>
+                                    </ul>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                                    <a href="https://latasquetadecaldes.com" className="btn-primary px-6 py-3 rounded-xl font-semibold inline-block" target="_blank" rel="noopener noreferrer">Visitar nuestra web</a>
+                                    <button onClick={() => window.location.reload()} className="btn-secondary px-6 py-3 rounded-xl font-semibold">Nueva recomendación</button>
+                                </div>
+                                <p className="text-sm text-gray-600">Síguenos en Instagram: <a href="https://instagram.com/latasquetadecaldes" className="font-bold hover:underline" style={{color: 'var(--tasqueta-blue)'}} target="_blank" rel="noopener noreferrer">@latasquetadecaldes</a></p>
+                            </div>
+                        </div>
+                        <FloatingContactButtons />
+                    </>
+                );
+            }
+
+            if (currentView === 'welcome') {
+                return (
+                    <>
+                        <div className="min-h-screen gradient-bg p-4 flex items-center justify-center">
+                            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full animate-fade-in">
+                                <div className="text-center mb-8">
+                                    <div className="text-6xl mb-4">🐔</div>
+                                    <h1 className="font-playfair text-4xl md:text-5xl mb-2" style={{color: 'var(--tasqueta-blue)'}}>La Tasqueta de Caldes</h1>
+                                    <p className="text-xl text-gray-600">Bienvenido a nuestra carta digital</p>
+                                </div>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block font-semibold mb-2 text-gray-700">Nombre *</label>
+                                        <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full p-3 border-2 rounded-xl" placeholder="Tu nombre" required />
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold mb-2 text-gray-700">Email *</label>
+                                        <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full p-3 border-2 rounded-xl" placeholder="tu@email.com" required />
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold mb-2 text-gray-700">Teléfono (opcional)</label>
+                                        <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full p-3 border-2 rounded-xl" placeholder="+34 600 000 000" />
+                                        <p className="text-xs text-gray-500 mt-1">Útil para reservas y promociones exclusivas</p>
+                                    </div>
+                                    <div>
+                                        <label className="block font-semibold mb-2 text-gray-700">Fecha de Nacimiento (opcional)</label>
+                                        <input type="date" value={formData.birthday} onChange={(e) => setFormData({...formData, birthday: e.target.value})} className="w-full p-3 border-2 rounded-xl" />
+                                        <p className="text-xs text-gray-500 mt-1">Te enviaremos una sorpresa en tu cumpleaños 🎂</p>
+                                    </div>
+                                    <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-xl">
+                                        <input type="checkbox" checked={formData.consent} onChange={(e) => setFormData({...formData, consent: e.target.checked})} className="mt-1" required />
+                                        <label className="text-sm text-gray-700">
+                                            Acepto recibir comunicaciones de La Tasqueta de Caldes y he leído la{' '}
+                                            <button onClick={() => setShowLOPD(true)} className="underline font-semibold" style={{color: 'var(--tasqueta-blue)'}}>política de privacidad</button>
+                                        </label>
+                                    </div>
+                                    <button onClick={() => { if(formData.name && formData.email && formData.consent) setCurrentView('choose'); }} disabled={!formData.name || !formData.email || !formData.consent} className="w-full btn-primary py-4 rounded-xl font-bold text-lg">
+                                        Continuar →
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <FloatingContactButtons />
+                        <LOPDModal />
+                    </>
+                );
+            }
+
+            if (currentView === 'choose') {
+                return (
+                    <>
+                        <div className="min-h-screen p-4" style={{backgroundColor: 'var(--tasqueta-cream)'}}>
+                            <div className="max-w-5xl mx-auto py-16 animate-fade-in">
+                                <div className="text-center mb-12">
+                                    <h2 className="font-playfair text-4xl md:text-5xl mb-4" style={{color: 'var(--tasqueta-blue)'}}>¡Hola {formData.name}!</h2>
+                                    <p className="text-xl text-gray-600">¿Cómo quieres explorar nuestra carta?</p>
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <div onClick={() => { generateRecommendations(); setCurrentView('recommender'); setStep(2); }} className="card-hover cursor-pointer bg-white p-8 rounded-3xl border-3 text-center" style={{borderColor: 'var(--tasqueta-blue)'}}>
+                                        <div className="text-6xl mb-4">🎯</div>
+                                        <h3 className="font-playfair text-3xl mb-3" style={{color: 'var(--tasqueta-blue)'}}>Recomendador Inteligente</h3>
+                                        <p className="text-gray-600 mb-4">Descubre tu menú ideal personalizado según tus preferencias y alergias</p>
+                                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                            <span>⏱️ 2 minutos</span>
+                                            <span>•</span>
+                                            <span>🎁 Sorpresas personalizadas</span>
+                                        </div>
+                                    </div>
+                                    <div onClick={() => setCurrentView('carta')} className="card-hover cursor-pointer bg-white p-8 rounded-3xl border-3 border-gray-300 text-center">
+                                        <div className="text-6xl mb-4">📖</div>
+                                        <h3 className="font-playfair text-3xl mb-3" style={{color: 'var(--tasqueta-blue)'}}>Carta Tradicional</h3>
+                                        <p className="text-gray-600 mb-4">Explora toda nuestra carta completa organizada por secciones</p>
+                                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                                            <span>📋 58 platos</span>
+                                            <span>•</span>
+                                            <span>🍷 39 vinos</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <TopBar />
+                        <FloatingContactButtons />
+                        <ImprescindiblesModal />
+                        <VinosModal />
+                        <AllergenWarningModal />
+                    </>
+                );
+            }
+
+            if (currentView === 'carta') {
+                const allDishes = {
+                    'Tapas': dishesDatabase.tapas,
+                    'Ensaladas': dishesDatabase.ensaladas,
+                    'Patatas': dishesDatabase.patatas,
+                    'Arroces y Fideuás': dishesDatabase.arroces,
+                    'Del Mar': dishesDatabase.mar,
+                    'De la Tierra': dishesDatabase.tierra,
+                    'Postres': dishesDatabase.postres
+                };
+
+                return (
+                    <>
+                        <div className="min-h-screen content-with-topbar p-4" style={{backgroundColor: 'var(--tasqueta-cream)'}}>
+                            <div className="max-w-4xl mx-auto py-8">
+                                <div className="text-center mb-8">
+                                    <h2 className="font-playfair text-4xl mb-2" style={{color: 'var(--tasqueta-blue)'}}>Nuestra Carta</h2>
+                                    <p className="text-gray-600">Explora nuestros platos por secciones</p>
+                                </div>
+
+                                {Object.entries(allDishes).map(([section, dishes]) => (
+                                    <div key={section} className="carta-section mb-6 animate-slide-down">
+                                        <h3 className="section-header font-playfair text-2xl mb-4">
+                                            {section === 'Tapas' && '🍤 '}{section === 'Ensaladas' && '🥗 '}{section === 'Patatas' && '🥔 '}
+                                            {section === 'Arroces y Fideuás' && '🍚 '}{section === 'Del Mar' && '🦐 '}{section === 'De la Tierra' && '🥩 '}
+                                            {section === 'Postres' && '🍰 '}{section}
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {dishes.map(dish => (
+                                                <div key={dish.id} className={`dish-item ${dish.badge === 'imperdible' ? 'imperdible-card' : ''}`}>
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <div className="flex-1">
+                                                            <h4 className="font-bold text-base">{dish.name}</h4>
+                                                            {dish.badge && <span className={getBadgeClass(dish.badge)}>{getBadgeIcon(dish.badge)} {dish.badge.toUpperCase()}</span>}
+                                                        </div>
+                                                        <span className="price-tag text-lg">{dish.price}€</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mb-1">{dish.description}</p>
+                                                    {dish.minPersonas && <p className="text-xs font-semibold" style={{color: 'var(--tasqueta-blue)'}}>⚠️ Mín. {dish.minPersonas} personas{dish.paraLlevar && ' · Para llevar disponible'}</p>}
+                                                    {dish.allergens && dish.allergens.length > 0 && <p className="text-xs text-gray-500 mt-1"><strong>Alérgenos:</strong> {dish.allergens.join(', ')}</p>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="text-center mt-8">
+                                    <button onClick={() => setCurrentView('choose')} className="btn-secondary px-8 py-3 rounded-xl">← Volver</button>
+                                </div>
+                            </div>
+                        </div>
+                        <TopBar />
+                        <FloatingContactButtons />
+                        <ImprescindiblesModal />
+                        <VinosModal />
+                        <AllergenWarningModal />
+                    </>
+                );
+            }
+
+            if (currentView === 'recommender') {
+                if (step === 2) {
+                    return (
+                        <>
+                            <div className="min-h-screen content-with-topbar p-4" style={{backgroundColor: 'var(--tasqueta-cream)'}}>
+                                <div className="max-w-4xl mx-auto py-8 animate-fade-in">
+                                    <h2 className="font-playfair text-4xl mb-2 text-center" style={{color: 'var(--tasqueta-blue)'}}>Personaliza tu experiencia</h2>
+                                    <p className="text-center mb-8 text-gray-600">Cuéntanos tus preferencias</p>
+                                    <div className="mb-8">
+                                        <div className="flex justify-between text-xs text-gray-500 mb-2">
+                                            <span className="font-semibold" style={{color: 'var(--tasqueta-blue)'}}>Paso 2 de 3</span>
+                                            <span>Alergias y Objetivo</span>
+                                        </div>
+                                        <div className="progress-bar"><div className="progress-fill" style={{width: '66%'}}></div></div>
+                                    </div>
+
+                                    <div className="bg-white rounded-3xl shadow-lg p-6 mb-6">
+                                        <h3 className="font-bold mb-2 text-xl">⚠️ Alergias e Intolerancias</h3>
+                                        <p className="text-sm text-gray-600 mb-4">Selecciona todo lo que aplique</p>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                            {allergensList.map(allergen => (
+                                                <button key={allergen} onClick={() => setFormData(prev => ({
+                                                    ...prev, allergies: prev.allergies.includes(allergen) ? prev.allergies.filter(a => a !== allergen) : [...prev.allergies, allergen]
+                                                }))} className={`p-3 rounded-xl border-2 font-semibold text-sm transition-all ${formData.allergies.includes(allergen) ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 hover:border-red-300 text-gray-700'}`}>
+                                                    {allergen.charAt(0).toUpperCase() + allergen.slice(1)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white rounded-3xl shadow-lg p-6 mb-6">
+                                        <h3 className="font-bold mb-2 text-xl">🎯 ¿Cuál es tu objetivo hoy?</h3>
+                                        <div className="space-y-2">
+                                            {objectives.map(obj => (
+                                                <button key={obj} onClick={() => setFormData({...formData, objective: obj})} className={`w-full p-4 rounded-xl border-2 text-left transition-all font-medium ${formData.objective === obj ? 'btn-primary border-transparent' : 'border-gray-200 hover:border-blue-300 bg-white text-gray-700'}`}>
+                                                    {obj}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button onClick={() => setCurrentView('choose')} className="flex-1 btn-secondary py-4 rounded-xl font-bold">← Atrás</button>
+                                        <button onClick={() => setStep(3)} disabled={!formData.objective} className="flex-1 btn-primary py-4 rounded-xl font-bold">Ver Recomendaciones →</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <TopBar />
+                            <FloatingContactButtons />
+                            <ImprescindiblesModal />
+                            <VinosModal />
+                            <AllergenWarningModal />
+                        </>
+                    );
+                }
+
+                if (step === 3) {
+                    return (
+                        <>
+                            <div className="min-h-screen content-with-topbar p-4" style={{backgroundColor: 'var(--tasqueta-cream)'}}>
+                                <div className="max-w-6xl mx-auto py-8 animate-fade-in">
+                                    <h2 className="font-playfair text-4xl mb-2 text-center" style={{color: 'var(--tasqueta-blue)'}}>Tus Recomendaciones</h2>
+                                    <p className="text-center mb-8 text-gray-600">Marca lo que te guste</p>
+
+                                    <div className="mb-8">
+                                        <h3 className="section-header font-playfair text-2xl mb-6">🍽️ Platos Recomendados</h3>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            {recommendations.dishes.map(dish => (
+                                                <div key={dish.id} onClick={() => toggleDish(dish.id)} className={`card-hover cursor-pointer p-6 rounded-2xl border-2 ${formData.selectedDishes.includes(dish.id) ? 'selected-card' : dish.badge === 'imperdible' ? 'imperdible-card' : 'bg-white border-gray-200'}`}>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex-1">
+                                                            <h4 className="font-bold text-lg">{dish.name}</h4>
+                                                            {dish.badge && <span className={getBadgeClass(dish.badge)}>{getBadgeIcon(dish.badge)} {dish.badge.toUpperCase()}</span>}
+                                                        </div>
+                                                        <span className="price-tag">{dish.price}€</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600">{dish.description}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-8">
+                                        <h3 className="section-header font-playfair text-2xl mb-6">🍷 Vinos Recomendados</h3>
+                                        <div className="grid md:grid-cols-3 gap-4">
+                                            {recommendations.wines.map(wine => (
+                                                <div key={wine.id} onClick={() => toggleWine(wine.id)} className={`card-hover cursor-pointer p-6 rounded-2xl border-2 ${formData.selectedWines.includes(wine.id) ? 'selected-card' : 'bg-white border-gray-200'}`}>
+                                                    <h4 className="font-bold text-lg mb-1">{wine.name}</h4>
+                                                    <p className="text-sm text-gray-600 mb-2">{wine.type} · {wine.region}</p>
+                                                    <p className="price-tag">{wine.price}€</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button onClick={() => setStep(2)} className="flex-1 btn-secondary py-4 rounded-xl font-bold">← Atrás</button>
+                                        <button onClick={handleSubmit} disabled={loading || formData.selectedDishes.length === 0} className="flex-1 btn-primary py-4 rounded-xl font-bold">
+                                            {loading ? <span className="flex items-center justify-center gap-2"><div className="spinner mx-auto"></div> Guardando...</span> : 'Confirmar Selección ✓'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <TopBar />
+                            <FloatingContactButtons />
+                            <ImprescindiblesModal />
+                            <VinosModal />
+                            <AllergenWarningModal />
+                        </>
+                    );
+                }
+            }
+
+            return <div>Cargando...</div>;
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
